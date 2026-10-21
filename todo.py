@@ -3,30 +3,33 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).parent
 TASKS_FILE = BASE_DIR / "tasks.json"
+PRIORITY_NAMES = {1: "Высокий", 2: "Средний", 3: "Низкий"}
 
 def show_tasks(tasks):
     if tasks:
         for index, task in enumerate(tasks, start=1):
             checkbox = "✅" if task['done'] else "⬜"
-            priority_text = "Высокий приоритет" if task['priority'] == 1 else "Средний приоритет" if task['priority'] == 2 else "Низкий приоритет"
-            print(f"[{priority_text}] {index}. {task['title']}: {checkbox}\n")
+            print(f"[{PRIORITY_NAMES[task['priority']]} приоритет] {index}. {task['title']}: {checkbox}\n")
     else:
         print("Задачи отсутствуют")
 
 def add_task(tasks):
-    title = input("Введите задачу: ")
+    title = input("Введите задачу: ").strip()
     print("")
-    try:
-        priority = int(input("Задайте приоритет: (1 - высокий, 2 - средний, 3 - низкий) "))
-        print("")
-        if 1 <= priority <= 3:
-            tasks.append({"title": title, "done": False, "priority": priority})
-            save_tasks(tasks)
-            print(f"Добавлена задача: {title}")
-        else:
-            print("Приоритет вне диапазона")
-    except ValueError:
-        print("Вы ввели не целое число")
+    if title:
+        try:
+            priority = int(input("Задайте приоритет: (1 - высокий, 2 - средний, 3 - низкий) "))
+            print("")
+            if 1 <= priority <= 3:
+                tasks.append({"title": title, "done": False, "priority": priority})
+                save_tasks(tasks)
+                print(f"Добавлена задача: {title}")
+            else:
+                print("Приоритет вне диапазона")
+        except ValueError:
+            print("Вы ввели не целое число")
+    else:
+        print("Название не может быть пустым")
     
 def done_task(tasks):
     number = ask_task_number(tasks)
@@ -41,6 +44,13 @@ def delete_task(tasks):
         print(f"Удалена задача: {tasks[number - 1]['title']}")
         del tasks[number - 1]
         save_tasks(tasks)
+
+def clear_tasks(tasks):
+    before = len(tasks)
+    tasks[:] = [task for task in tasks if not task["done"]]
+    after = len(tasks)
+    print(f"Очищено задач: {before - after}")
+    save_tasks(tasks)
     
 def save_tasks(tasks):
     with open(TASKS_FILE, "w", encoding="utf-8") as f:
@@ -81,6 +91,7 @@ show - показать задачи
 add - добавить задачу
 done - выполнить задачу
 delete - удалить задачу
+clear - очистить выполненные задачи
 exit - выход из программы""")
 
 while program_running:
@@ -96,6 +107,8 @@ while program_running:
             done_task(tasks)
         case "delete":
             delete_task(tasks)
+        case "clear":
+            clear_tasks(tasks)
         case "exit":
             program_running = exit_program()
         case _:
