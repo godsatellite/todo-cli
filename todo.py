@@ -13,15 +13,35 @@ def show_tasks(tasks):
     else:
         print("Задачи отсутствуют")
 
-def add_task(tasks, title, priority):
-    tasks.append({"title": title, "done": False, "priority": priority})
-
-def done_task(tasks, number):
-    tasks[number - 1]["done"] = True
-
-def delete_task(tasks, number):
-    del tasks[number - 1]
-
+def add_task(tasks):
+    title = input("Введите задачу: ")
+    print("")
+    try:
+        priority = int(input("Задайте приоритет: (1 - высокий, 2 - средний, 3 - низкий) "))
+        print("")
+        if 1 <= priority <= 3:
+            tasks.append({"title": title, "done": False, "priority": priority})
+            save_tasks(tasks)
+            print(f"Добавлена задача: {title}")
+        else:
+            print("Приоритет вне диапазона")
+    except ValueError:
+        print("Вы ввели не целое число")
+    
+def done_task(tasks):
+    number = ask_task_number(tasks)
+    if number is not None:
+        tasks[number - 1]["done"] = True
+        save_tasks(tasks)
+        print(f"Выполнена задача: {tasks[number - 1]['title']}✅")
+      
+def delete_task(tasks):
+    number = ask_task_number(tasks)
+    if number is not None:
+        print(f"Удалена задача: {tasks[number - 1]['title']}")
+        del tasks[number - 1]
+        save_tasks(tasks)
+    
 def save_tasks(tasks):
     with open(TASKS_FILE, "w", encoding="utf-8") as f:
         json.dump(tasks, f, ensure_ascii=False, indent=2)
@@ -36,7 +56,25 @@ def load_tasks():
         print("Файл tasks.json повреждён. Исправьте или удалите его и запустите программу снова.")
         raise SystemExit
 
+def ask_task_number(tasks):
+    try:
+        number = int(input("Выберите номер задачи: "))
+        print("")
+    except ValueError:
+        print("Вы ввели не целое число")
+        return None
+    if not 1 <= number <= len(tasks):
+        print("Номер вне диапазона")
+        return None
+    return number
+
+def exit_program():
+    print("Выходим из программы...")
+    return False
+    
+
 tasks = load_tasks()
+program_running = True
 
 print("""Меню:
 show - показать задачи
@@ -45,53 +83,20 @@ done - выполнить задачу
 delete - удалить задачу
 exit - выход из программы""")
 
-while True:
+while program_running:
     choice = input("\nВыберите действие: ").lower()
     print("")
 
-    if choice == "show":
-        show_tasks(tasks)
-    elif choice == "add":
-        title = input("Введите задачу: ")
-        print("")
-        try:
-            priority = int(input("Задайте приоритет: (1 - высокий, 2 - средний, 3 - низкий) "))
-            print("")
-            if 1 <= priority <= 3:
-                add_task(tasks, title, priority)
-                save_tasks(tasks)
-                print(f"Добавлена задача: {title}")
-            else:
-                print("Приоритет вне диапазона")
-        except ValueError:
-            print("Вы ввели не число")
-    elif choice == "done":
-        try:
-            number = int(input("Выберите номер задачи: "))
-            print("")
-            if 1 <= number <= len(tasks):
-                done_task(tasks, number)
-                save_tasks(tasks)
-                print(f"Выполнена задача: {tasks[number - 1]['title']}✅")
-            else:
-                print("Номер вне диапазона")
-        except ValueError:
-            print("Вы ввели не число")
-    elif choice == "delete":
-        try:
-            number = int(input("Выберите номер задачи: "))
-            print("")
-            if 1 <= number <= len(tasks):
-                print(f"Удалена задача: {tasks[number - 1]['title']}")
-                delete_task(tasks, number)
-                save_tasks(tasks)
-            else:
-                print("Номер вне диапазона")
-        except ValueError:
-            print("Вы ввели не число")
-    elif choice == "exit":
-        break
-    else:
-        print("Неизвестная команда")
-
-    
+    match choice:
+        case "show":
+            show_tasks(tasks)
+        case "add":
+            add_task(tasks)
+        case "done":
+            done_task(tasks)
+        case "delete":
+            delete_task(tasks)
+        case "exit":
+            program_running = exit_program()
+        case _:
+            print("Неизвестная команда")
