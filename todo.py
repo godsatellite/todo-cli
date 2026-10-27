@@ -1,5 +1,6 @@
 ﻿import json
 from pathlib import Path
+from datetime import date
 
 BASE_DIR = Path(__file__).parent
 TASKS_FILE = BASE_DIR / "tasks.json"
@@ -9,7 +10,7 @@ def show_tasks(tasks):
     if tasks:
         for index, task in enumerate(tasks, start=1):
             checkbox = "✅" if task['done'] else "⬜"
-            print(f"[{PRIORITY_NAMES[task['priority']]} приоритет] {index}. {task['title']}: {checkbox}\n")
+            print(f"[{PRIORITY_NAMES[task['priority']]} приоритет] {index}. {task['title']} {checkbox} Дата: {task['date']}\n")
     else:
         print("Задачи отсутствуют")
 
@@ -21,7 +22,8 @@ def add_task(tasks):
             priority = int(input("Задайте приоритет: (1 - высокий, 2 - средний, 3 - низкий) "))
             print("")
             if 1 <= priority <= 3:
-                tasks.append({"title": title, "done": False, "priority": priority})
+                task_date = ask_due_date()
+                tasks.append({"title": title, "done": False, "priority": priority, "date": task_date})
                 save_tasks(tasks)
                 print(f"Добавлена задача: {title}")
             else:
@@ -30,6 +32,18 @@ def add_task(tasks):
             print("Вы ввели не целое число")
     else:
         print("Название не может быть пустым")
+
+def ask_due_date():
+    date_str = input("Введите дату для задачи: (Формат YYYY-MM-DD) ")
+    print()
+    if not date_str.strip():
+        return None
+    try:
+        date.fromisoformat(date_str)
+        return date_str
+    except ValueError:
+        print("Неверный формат даты. Дата не установлена\n")
+        return None
     
 def done_task(tasks):
     number = ask_task_number(tasks)
