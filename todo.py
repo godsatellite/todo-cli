@@ -5,12 +5,13 @@ from datetime import date
 BASE_DIR = Path(__file__).parent
 TASKS_FILE = BASE_DIR / "tasks.json"
 PRIORITY_NAMES = {1: "Высокий", 2: "Средний", 3: "Низкий", None: "Пустой"}
+MONTHS = ("января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября", "ноября", "декабря")
 
 def show_tasks(tasks):
     if tasks:
         for index, task in enumerate(tasks, start=1):
             checkbox = "✅" if task['done'] else "⬜"
-            print(f"[{PRIORITY_NAMES[task['priority']]} приоритет] {index}. {task['title']} {checkbox} Дата: {task['date'] or 'нет'}")
+            print(f"[{PRIORITY_NAMES[task['priority']]} приоритет] {index}. {task['title']} {checkbox} Дата: {format_due(task['date'])}")
     else:
         print("Задачи отсутствуют")
 
@@ -25,7 +26,7 @@ def add_task(tasks):
     title = input("Введите задачу: ").strip()
     print()
     if title:
-        priority = (input("Задайте приоритет: (1 - высокий, 2 - средний, 3 - низкий (или введите пустоту/не цифру, если приоритет неопределён)) "))
+        priority = (input("Задайте приоритет: (1 - высокий, 2 - средний, 3 - низкий (или введите пустоту/не цифру, если приоритет не определён)) "))
         print()
         try:
             if 1 <= int(priority) <= 3:
@@ -67,7 +68,7 @@ def edit_date(tasks):
             save_tasks(tasks)
             return
         tasks[number - 1]["date"] = edited_date
-        print(f"Обновлена дата для {tasks[number -1]['title']}. Новая дата: {tasks[number - 1]['date']}")
+        print(f"Обновлена дата для {tasks[number -1]['title']}. Новая дата: {format_due(tasks[number - 1]['date'])}")
         sort_tasks(tasks)
         save_tasks(tasks)
 
@@ -159,6 +160,25 @@ def ask_task_number(tasks):
 
 def sort_tasks(tasks):
     tasks.sort(key=lambda t: (t["done"], t["date"] or "9999-12-31", t["priority"] or 4))
+
+def format_date(d):
+    return (f"{d.day} {MONTHS[d.month - 1]} {d.year}")
+
+def format_due(date_str):
+    if not date_str:
+        return "нет"
+    due = date.fromisoformat(date_str)
+    days_left = (due - date.today()).days
+
+    match days_left:
+        case 0:
+            return "Сегодня"
+        case 1:
+            return "Завтра"
+        case -1:
+            return "Вчера"
+        case _:
+            return format_date(due)
 
 def exit_program():
     print("Выходим из программы...")
